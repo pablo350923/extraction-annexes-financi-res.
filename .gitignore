@@ -1,0 +1,6 @@
+outputs/
+outputs_test/
+__pycache__/
+.ipynb_checkpoints/
+.venv/
+.DS_Store

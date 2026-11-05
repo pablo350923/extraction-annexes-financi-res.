@@ -1,0 +1,28 @@
+﻿colonne,signification_metier,type,unite_format,plage_valeurs_autorisees
+id_ligne,Identifiant unique de la ligne (un chiffre à extraire),texte,L0001…,L0001–L0806
+id_report,Identifiant du rapport annuel traité,texte,RPT-nnn,40 rapports
+id_entreprise,Identifiant fictif de l'émetteur,texte,ENT-nnn,30 entreprises
+nom_entreprise,Raison sociale fictive,texte,—,30 noms inventés
+secteur,Secteur d'activité,catégorie,—,14 secteurs (quelques libellés incohérents volontaires)
+pays,Pays du siège,catégorie,—,9 pays
+referentiel_comptable,Normes comptables du rapport,catégorie,—,"IFRS, US GAAP"
+exercice,Exercice fiscal du rapport,entier,AAAA,2024–2025
+devise,Devise de présentation,catégorie,ISO 4217,"EUR, GBP, USD, CHF (+ '€' en anomalie)"
+langue_rapport,Langue du rapport (détermine le format des nombres),catégorie,—,"FR, EN"
+nb_pages_rapport,Nombre de pages du rapport annuel PDF,entier,pages,110–320
+section_annexe,Note annexe où se trouve le chiffre,catégorie,—,Information sectorielle / Dettes financières / Contrats de location (ou équivalent EN)
+numero_note,Numéro de la note annexe,entier,—,3–26
+page_note,Page PDF où commence la note,entier,page,57–220 (quelques vides)
+mise_en_page_tableau,Type de tableau dans le PDF (facteur de difficulté),catégorie,—,"simple, multi-colonnes N/N-1, imbriqué, scanné/image"
+code_champ,Code normalisé du champ cible dans le modèle Excel,catégorie,—,20 codes
+libelle_dans_rapport,Intitulé tel qu'écrit dans le rapport,texte,—,FR ou EN selon le rapport
+echelle_publiee,Échelle d'affichage dans le rapport,catégorie,—,"millions, milliers, pourcentage"
+texte_brut_publie,Chiffre exactement tel qu'imprimé (avant normalisation),texte,"'1 234,5' (FR), '1,234.5' (EN), '(123,4)' = négatif",—
+valeur_reference,VÉRITÉ TERRAIN : valeur correcte normalisée,décimal,M devise ou %,"0,3 – 33 000 M ; taux 1,4–7,3 %"
+unite_reference,Unité de valeur_reference,catégorie,—,"'M EUR', 'M USD'…, '%'"
+valeur_saisie_manuelle,Valeur saisie par l'analyste dans Excel (baseline),décimal,même unité que la référence,vide si omission
+erreur_saisie,LABEL : 1 si la saisie manuelle diffère de la référence,binaire,0/1,"≈7,6 % de 1"
+type_erreur,Nature de l'erreur manuelle,catégorie,—,"aucune, transposition, mauvaise_colonne_N-1, arrondi, omission, signe, mauvaise_echelle"
+temps_saisie_sec,Temps passé pour trouver et saisir ce chiffre (le 1er champ d'une note inclut la recherche de la note),entier,secondes,13–600 ; quelques valeurs aberrantes jusqu'à ~2 600 ; quelques vides
+id_analyste,Analyste junior ayant fait la saisie,catégorie,AN-0n,AN-01 à AN-06
+date_saisie,Date de la saisie,date,AAAA-MM-JJ (quelques JJ/MM/AAAA),janv.–sept. 2026
