@@ -10,6 +10,7 @@ Utilisation :
     from pipeline import run_pipeline
     results = run_pipeline("data/dataset_extraction_annexes_financieres.csv")
 """
+import json
 import re
 import time
 from pathlib import Path
@@ -519,6 +520,45 @@ def run_alerting(transformed, per_report, threshold_pct=THRESHOLD_PCT):
     return {"df": df, "gaps": pd.concat([gaps_manual, gaps_tool], ignore_index=True),
             "calibration": calibration, "alerts": pd.concat([alerts_manual, alerts_tool], ignore_index=True),
             "comparison": comparison}
+
+
+def dashboard_data(path):
+    """Données affichées par l'application HTML (webapp_controle_annexes.html).
+    La page appelle cette fonction dans le navigateur (Pyodide) quand on importe un fichier."""
+    raw = load_source(path)
+    report_before, details = validate(raw)
+    clean_df, quarantine, log, report_after, n_dup = clean(raw)
+    transformed, per_report, baseline = transform(clean_df)
+    df, runtime_sec = extract(transformed)
+    gaps = pd.concat([control_gaps(df, "valeur_saisie_manuelle", "erreur_saisie", "manuel"),
+                      control_gaps(df, "valeur_extraite_outil", "erreur_outil", "outil")])
+
+    def records(table):
+        return json.loads(table.to_json(orient="records", force_ascii=False))
+
+    quality = report_before[["regle", "description", "gravite", "nb_echecs"]].merge(
+        report_after[["regle", "nb_echecs"]], on="regle", suffixes=("_avant", "_apres"))
+    return {
+        "gaps": records(gaps[["source", "id_report", "controle", "champs_controles", "ecart", "ecart_pct",
+                              "unite_arrondi", "numero_note", "page_note", "erreur_reelle"]]),
+        "fields": [[r, c, int(a), int(b)] for r, c, a, b in
+                   zip(df["id_report"], df["code_champ"], df["erreur_saisie"], df["erreur_outil"])],
+        "quality": records(quality),
+        "log": records(log[["action", "colonne", "nb_lignes", "detail"]]),
+        "quarantine": records(quarantine[["id_ligne", "id_report", "code_champ", "motif_quarantaine"]]),
+        "baseline": records(baseline),
+        "summary": {
+            "source": Path(path).name, "rows_raw": len(raw), "rows_clean": len(clean_df),
+            "quarantine": len(quarantine), "dups": n_dup, "reports": int(df["id_report"].nunique()),
+            "fields": len(df), "sec_per_field": float(per_report["temps_moyen_par_champ_sec"].mean()),
+            "manual_min": float(per_report["temps_estime_min"].mean()),
+            "manual_err": float(df["erreur_saisie"].mean() * 100),
+            "tool_err": float(df["erreur_outil"].mean() * 100),
+            "tool_min": runtime_sec / 60 / df["id_report"].nunique(),
+            "val_fail": int(details["id_ligne"].nunique()),
+        },
+        "high": HIGH_ALERT_PCT,
+    }
 
 
 # =============================================================================

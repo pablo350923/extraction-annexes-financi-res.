@@ -1,0 +1,359 @@
+<!doctype html>
+<html lang="fr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Contrôle des annexes financières</title>
+<style>
+:root{
+  --bg:#f6f7f9; --panel:#ffffff; --ink:#1b2430; --muted:#5d6b7a; --line:#e3e7ec;
+  --accent:#1f5fbf; --accent-soft:#e6eefb;
+  --high-bg:#fbe1d6; --high-ink:#9a3412; --mid-bg:#fdf1c7; --mid-ink:#854d0e;
+  --ok:#15803d; --bar-hit:#1f5fbf; --bar-miss:#c9d3df;
+}
+@media (prefers-color-scheme: dark){
+  :root:not([data-theme="light"]){
+    --bg:#11151a; --panel:#1a2028; --ink:#e7ecf2; --muted:#9aa7b5; --line:#2b333d;
+    --accent:#6ea3ff; --accent-soft:#1d2b42;
+    --high-bg:#4a2416; --high-ink:#fdba9a; --mid-bg:#3f3412; --mid-ink:#f5d77a;
+    --ok:#4ade80; --bar-hit:#6ea3ff; --bar-miss:#3a4552;
+  }
+}
+:root[data-theme="dark"]{
+  --bg:#11151a; --panel:#1a2028; --ink:#e7ecf2; --muted:#9aa7b5; --line:#2b333d;
+  --accent:#6ea3ff; --accent-soft:#1d2b42;
+  --high-bg:#4a2416; --high-ink:#fdba9a; --mid-bg:#3f3412; --mid-ink:#f5d77a;
+  --ok:#4ade80; --bar-hit:#6ea3ff; --bar-miss:#3a4552;
+}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--ink);font:15px/1.5 -apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,sans-serif}
+.wrap{max-width:1180px;margin:0 auto;padding:28px 16px 60px}
+header h1{font-size:26px;margin:0 0 4px;letter-spacing:-.01em}
+header p{margin:0;color:var(--muted)}
+.flow{display:flex;flex-wrap:wrap;gap:6px;margin:16px 0 22px}
+.flow span{background:var(--panel);border:1px solid var(--line);border-radius:999px;padding:3px 11px;font-size:13px;color:var(--muted)}
+.flow span.on{background:var(--accent-soft);color:var(--accent);border-color:transparent;font-weight:600}
+.controls{display:flex;flex-wrap:wrap;align-items:center;gap:10px;background:var(--panel);border:1px solid var(--line);border-radius:12px;padding:12px 14px;margin-bottom:18px}
+.controls b{font-size:14px;margin-right:4px}
+.seg{display:inline-flex;border:1px solid var(--line);border-radius:8px;overflow:hidden}
+.seg button{border:0;background:transparent;color:var(--ink);padding:6px 12px;font:inherit;font-size:14px;cursor:pointer;border-right:1px solid var(--line)}
+.seg button:last-child{border-right:0}
+.seg button.on{background:var(--accent);color:#fff}
+.hint{color:var(--muted);font-size:13px}
+.kpis{display:grid;grid-template-columns:repeat(4,1fr);gap:12px;margin-bottom:22px}
+.kpi{background:var(--panel);border:1px solid var(--line);border-radius:12px;padding:14px 16px}
+.kpi .l{color:var(--muted);font-size:13px}
+.kpi .v{font-size:28px;font-weight:650;font-variant-numeric:tabular-nums;margin-top:2px}
+.kpi .d{font-size:13px;color:var(--muted)}
+.kpi .d.good{color:var(--ok)}
+.tabs{display:flex;gap:4px;border-bottom:1px solid var(--line);margin-bottom:16px;overflow-x:auto}
+.tabs button{border:0;background:none;color:var(--muted);font:inherit;padding:9px 14px;cursor:pointer;border-bottom:2px solid transparent;white-space:nowrap}
+.tabs button.on{color:var(--accent);border-bottom-color:var(--accent);font-weight:600}
+.panel{display:none}.panel.on{display:block}
+.card{background:var(--panel);border:1px solid var(--line);border-radius:12px;padding:16px;margin-bottom:16px}
+.card h3{margin:0 0 10px;font-size:16px}
+.filters{display:flex;flex-wrap:wrap;gap:10px;margin-bottom:12px;align-items:center}
+.tablewrap{overflow-x:auto;max-height:560px;overflow-y:auto;border:1px solid var(--line);border-radius:10px}
+table{border-collapse:collapse;width:100%;font-size:13.5px}
+th,td{text-align:left;padding:7px 10px;border-bottom:1px solid var(--line);vertical-align:top}
+th{position:sticky;top:0;background:var(--panel);color:var(--muted);font-weight:600;z-index:1}
+td.num,th.num{text-align:right;font-variant-numeric:tabular-nums}
+tr.high td{background:var(--high-bg)} tr.mid td{background:var(--mid-bg)}
+.pill{display:inline-block;border-radius:6px;padding:1px 7px;font-size:12px;font-weight:650}
+.pill.high{background:var(--high-ink);color:var(--high-bg)} .pill.mid{background:var(--mid-ink);color:var(--mid-bg)}
+.empty{padding:20px;color:var(--ok)}
+.note{color:var(--muted);font-size:13px;margin-top:10px}
+.legend{display:flex;gap:16px;font-size:13px;color:var(--muted);margin-top:6px}
+.legend i{display:inline-block;width:11px;height:11px;border-radius:2px;margin-right:5px;vertical-align:-1px}
+svg text{fill:var(--muted);font-size:12px}
+#chart svg{max-width:680px;display:block}
+.btn{border:1px solid var(--line);background:var(--panel);color:var(--ink);border-radius:8px;padding:6px 12px;font:inherit;font-size:14px;cursor:pointer}
+.btn.primary{background:var(--accent);border-color:var(--accent);color:#fff;font-weight:600}
+.btn[aria-disabled="true"]{opacity:.55;pointer-events:none}
+.status{font-size:13px;color:var(--muted)} .status.err{color:var(--high-ink);font-weight:600} .status.ok{color:var(--ok)}
+@media (max-width:760px){.kpis{grid-template-columns:repeat(2,1fr)}.kpi .v{font-size:22px}}
+</style>
+</head>
+<body>
+<div class="wrap">
+<header>
+  <h1>Contrôle des données extraites des notes annexes</h1>
+  <p id="sub"></p>
+</header>
+<div class="flow">
+  <span>Source</span><span>Validation</span><span>Nettoyage</span><span>Transformation</span>
+  <span class="on">Extraction</span><span class="on">Écart de contrôle</span><span class="on" id="flow-th">Seuil</span><span class="on">Alerte</span>
+</div>
+
+<div class="controls">
+  <b>Données</b>
+  <label class="btn primary" for="file">Importer un fichier (CSV ou Excel)</label>
+  <input type="file" id="file" accept=".csv,.xlsx,.xls" hidden>
+  <button class="btn" id="demo" hidden>Revenir au jeu de démonstration</button>
+  <span class="status" id="status"></span>
+</div>
+
+<div class="controls">
+  <b>Seuil d'alerte</b>
+  <div class="seg" id="th-seg"></div>
+  <span class="hint">4 % = modèle du cours · 0,1 % = seuil retenu après calibrage</span>
+</div>
+
+<div class="kpis">
+  <div class="kpi"><div class="l">Rapports analysés</div><div class="v" id="k-rep"></div><div class="d" id="k-rep-d"></div></div>
+  <div class="kpi"><div class="l">Alertes (saisie manuelle)</div><div class="v" id="k-al"></div><div class="d" id="k-al-d"></div></div>
+  <div class="kpi"><div class="l">Erreur manuelle résiduelle</div><div class="v" id="k-err"></div><div class="d good" id="k-err-d"></div></div>
+  <div class="kpi"><div class="l">Temps manuel par rapport</div><div class="v" id="k-t"></div><div class="d" id="k-t-d"></div></div>
+</div>
+
+<nav class="tabs" id="tabs">
+  <button data-p="p-al" class="on">Alertes</button>
+  <button data-p="p-cal">Calibrage du seuil</button>
+  <button data-p="p-base">Comparaison avec la baseline</button>
+  <button data-p="p-q">Qualité des données</button>
+</nav>
+
+<section class="panel on" id="p-al">
+  <div class="card">
+    <div class="filters">
+      <div class="seg" id="src-seg"></div>
+      <div class="seg" id="lvl-seg"></div>
+      <button class="btn" id="dl">Télécharger les alertes (CSV)</button>
+    </div>
+    <div class="tablewrap"><table id="t-al"></table></div>
+    <p class="note">ÉLEVÉ : écart &gt; 4 % ou champ manquant. Chaque alerte indique la note et la page à revérifier.</p>
+  </div>
+</section>
+
+<section class="panel" id="p-cal">
+  <div class="card">
+    <h3>Erreurs de saisie détectées selon le seuil</h3>
+    <div id="chart"></div>
+    <div class="legend"><span><i style="background:var(--bar-hit)"></i>Erreurs détectées</span><span><i style="background:var(--bar-miss)"></i>Erreurs ratées</span></div>
+  </div>
+  <div class="card"><div class="tablewrap"><table id="t-cal"></table></div>
+  <p class="note">Évalué sur la saisie manuelle grâce au label <code>erreur_saisie</code> (vérité terrain).</p></div>
+</section>
+
+<section class="panel" id="p-base">
+  <div class="card">
+    <h3>X / Y / Z : outil + alerte vs saisie manuelle dans Excel</h3>
+    <div class="tablewrap"><table id="t-cmp"></table></div>
+    <p class="note">Hypothèse : revérifier un champ signalé prend le temps manuel moyen d'un champ. L'exactitude de l'outil est mesurée sur un texte déjà propre : à confirmer sur de vrais PDF.</p>
+  </div>
+  <div class="card"><h3>Baseline manuelle par type de tableau</h3><div class="tablewrap"><table id="t-base"></table></div></div>
+</section>
+
+<section class="panel" id="p-q">
+  <div class="card"><h3>Règles du Data Contract</h3><div class="tablewrap"><table id="t-q"></table></div></div>
+  <div class="card"><h3>Journal de nettoyage</h3><div class="tablewrap"><table id="t-log"></table></div>
+  <p class="note" id="q-note"></p></div>
+  <div class="card"><h3>Lignes en quarantaine</h3><div class="tablewrap"><table id="t-quar"></table></div></div>
+</section>
+</div>
+
+<script>
+const DEMO = __DATA__;
+const PIPELINE_SRC = __PIPELINE__;   // pipeline.py, exécuté dans le navigateur par Pyodide
+const PYODIDE_URL = "https://cdn.jsdelivr.net/pyodide/v0.26.4/full/";
+let D = DEMO, S = DEMO.summary;
+const THRESHOLDS = [4, 2, 1, 0.5, 0.1];
+const state = { th: 0.1, src: "manuel", lvl: "tous" };
+const fmt = (x, d = 1) => x == null ? "—" : Number(x).toLocaleString("fr-FR", { minimumFractionDigits: d, maximumFractionDigits: d });
+const esc = s => String(s).replace(/[&<>]/g, c => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;" }[c]));
+
+function isAlert(g, th) {
+  if (g.ecart == null) return true;
+  return g.ecart_pct > th && Math.abs(g.ecart) > g.unite_arrondi + 1e-9;
+}
+function alerts(th, source) {
+  return D.gaps.filter(g => g.source === source && isAlert(g, th)).map(g => {
+    const high = g.ecart == null || g.ecart_pct > D.high;
+    const page = g.page_note == null ? "?" : g.page_note;
+    return { ...g, niveau: high ? "ÉLEVÉ" : "MOYEN",
+      message: g.ecart == null ? `${g.controle} : un champ est manquant`
+        : `${g.controle} : écart de ${fmt(g.ecart, 3)} M (${fmt(g.ecart_pct, 2)} %)`,
+      action: `Revérifier la note ${g.numero_note} (p. ${page}) : ${g.champs_controles}` };
+  }).sort((a, b) => (a.niveau === b.niveau ? 0 : a.niveau === "ÉLEVÉ" ? -1 : 1)
+                  || ((b.ecart_pct ?? Infinity) - (a.ecart_pct ?? Infinity)));
+}
+function calibration() {
+  const gm = D.gaps.filter(g => g.source === "manuel");
+  const total = gm.filter(g => g.erreur_reelle).length || 1;
+  return THRESHOLDS.map(th => {
+    const a = gm.map(g => isAlert(g, th));
+    const tp = gm.filter((g, i) => a[i] && g.erreur_reelle).length;
+    return { seuil: th, alertes: a.filter(Boolean).length, vraies: tp,
+      fausses: gm.filter((g, i) => a[i] && !g.erreur_reelle).length, ratees: total - tp, detection: tp / total * 100 };
+  });
+}
+function comparison(th) {
+  const flagged = src => {
+    const set = new Set();
+    alerts(th, src).forEach(a => a.champs_controles.split(", ").forEach(c => set.add(a.id_report + "|" + c)));
+    return set;
+  };
+  const residual = (set, idx) => D.fields.filter(f => f[idx] === 1 && !set.has(f[0] + "|" + f[1])).length / S.fields * 100;
+  const review = set => set.size * S.sec_per_field / 60 / S.reports;
+  const fm = flagged("manuel"), ft = flagged("outil");
+  return [
+    ["Saisie manuelle seule (baseline Z)", S.manual_min, S.manual_err],
+    ["Saisie manuelle + alerte", S.manual_min + review(fm), residual(fm, 2)],
+    ["Outil d'extraction seul", S.tool_min, S.tool_err],
+    ["Outil d'extraction + alerte (X)", S.tool_min + review(ft), residual(ft, 3)],
+  ];
+}
+
+function table(el, head, rows, numCols = [], rowClass = () => "") {
+  const th = head.map((h, i) => `<th class="${numCols.includes(i) ? "num" : ""}">${esc(h)}</th>`).join("");
+  const tr = rows.map(r => `<tr class="${rowClass(r)}">` + r.cells.map((c, i) =>
+    `<td class="${numCols.includes(i) ? "num" : ""}">${c}</td>`).join("") + "</tr>").join("");
+  document.getElementById(el).innerHTML = `<thead><tr>${th}</tr></thead><tbody>${tr}</tbody>`;
+}
+function seg(el, options, key, labels = options) {
+  const box = document.getElementById(el);
+  box.innerHTML = options.map((o, i) => `<button data-v="${o}">${labels[i]}</button>`).join("");
+  box.querySelectorAll("button").forEach(b => b.onclick = () => {
+    state[key] = isNaN(b.dataset.v) ? b.dataset.v : Number(b.dataset.v); render();
+  });
+}
+function markSeg(el, v) { document.querySelectorAll(`#${el} button`).forEach(b => b.classList.toggle("on", b.dataset.v == v)); }
+
+function renderChart(cal) {
+  const W = 640, H = 240, pad = 34, bw = 70, gap = (W - pad * 2 - bw * cal.length) / (cal.length - 1);
+  const max = Math.max(...cal.map(c => c.vraies + c.ratees));
+  const y = v => H - pad - v / max * (H - pad * 2);
+  let s = `<svg viewBox="0 0 ${W} ${H}" width="100%" role="img" aria-label="Erreurs détectées par seuil">`;
+  cal.forEach((c, i) => {
+    const x = pad + i * (bw + gap), on = c.seuil === state.th;
+    s += `<rect x="${x}" y="${y(c.vraies + c.ratees)}" width="${bw}" height="${y(c.vraies) - y(c.vraies + c.ratees)}" fill="var(--bar-miss)" rx="3"/>`;
+    s += `<rect x="${x}" y="${y(c.vraies)}" width="${bw}" height="${H - pad - y(c.vraies)}" fill="var(--bar-hit)" rx="3" opacity="${on ? 1 : .6}"/>`;
+    s += `<text x="${x + bw / 2}" y="${y(c.vraies + c.ratees) - 6}" text-anchor="middle">${fmt(c.detection, 0)} %</text>`;
+    s += `<text x="${x + bw / 2}" y="${H - pad + 18}" text-anchor="middle" style="font-weight:${on ? 700 : 400}">${fmt(c.seuil, c.seuil < 1 ? 1 : 0)} %</text>`;
+  });
+  document.getElementById("chart").innerHTML = s + "</svg>";
+}
+
+function render() {
+  markSeg("th-seg", state.th); markSeg("src-seg", state.src); markSeg("lvl-seg", state.lvl);
+  document.getElementById("flow-th").textContent = `Seuil ${fmt(state.th, state.th < 1 ? 1 : 0)} %`;
+  const am = alerts(state.th, "manuel"), cmp = comparison(state.th);
+
+  document.getElementById("k-rep").textContent = S.reports;
+  document.getElementById("k-rep-d").textContent = `${S.fields} champs · ${S.dups} doublons retirés`;
+  document.getElementById("k-al").textContent = am.length;
+  document.getElementById("k-al-d").textContent = `${am.filter(a => a.niveau === "ÉLEVÉ").length} élevées · ${new Set(am.map(a => a.id_report)).size} rapports`;
+  document.getElementById("k-err").textContent = fmt(cmp[1][2], 2) + " %";
+  document.getElementById("k-err-d").textContent = `${fmt(cmp[1][2] - S.manual_err, 2)} pts vs baseline (${fmt(S.manual_err, 2)} %)`;
+  document.getElementById("k-t").textContent = fmt(S.manual_min) + " min";
+  document.getElementById("k-t-d").textContent = `+${fmt(cmp[1][1] - S.manual_min)} min de revue avec l'alerte`;
+
+  let shown = alerts(state.th, state.src);
+  if (state.lvl !== "tous") shown = shown.filter(a => a.niveau === state.lvl);
+  if (!shown.length) document.getElementById("t-al").innerHTML = `<tbody><tr><td class="empty">Aucune alerte pour cette sélection.</td></tr></tbody>`;
+  else table("t-al", ["Niveau", "Rapport", "Message", "Action"], shown.map(a => ({ lvl: a.niveau, cells: [
+      `<span class="pill ${a.niveau === "ÉLEVÉ" ? "high" : "mid"}">${a.niveau}</span>`, a.id_report, esc(a.message), esc(a.action)] })),
+    [], r => r.lvl === "ÉLEVÉ" ? "high" : "mid");
+
+  const cal = calibration();
+  renderChart(cal);
+  table("t-cal", ["Seuil", "Alertes", "Vraies alertes", "Fausses alertes", "Erreurs ratées", "Détection"],
+    cal.map(c => ({ cells: [fmt(c.seuil, c.seuil < 1 ? 1 : 0) + " %", c.alertes, c.vraies, c.fausses, c.ratees, fmt(c.detection) + " %"] })), [1, 2, 3, 4, 5]);
+  table("t-cmp", ["Scénario", "Temps / rapport (min)", "Erreurs résiduelles"],
+    cmp.map(r => ({ cells: [r[0], r[1] < 0.01 ? "< 0,01" : fmt(r[1]), fmt(r[2], 2) + " %"] })), [1, 2]);
+}
+
+function renderStatic() {
+  document.getElementById("sub").textContent =
+    `Source : ${S.source} · ${S.reports} rapports · ${S.fields} champs propres`;
+  table("t-base", ["Type de tableau", "Rapports", "Temps médian (min)", "Temps moyen (min)", "Taux d'erreur"],
+    D.baseline.map(b => ({ cells: [b.mise_en_page_tableau, b.nb_rapports, fmt(b.temps_median_par_rapport_min), fmt(b.temps_moyen_par_rapport_min), fmt(b.taux_erreur_pct, 2) + " %"] })), [1, 2, 3, 4]);
+  table("t-q", ["Règle", "Description", "Gravité", "Échecs avant", "Échecs après"],
+    D.quality.map(q => ({ cells: [q.regle, esc(q.description), q.gravite, q.nb_echecs_avant, q.nb_echecs_apres] })), [3, 4]);
+  table("t-log", ["Action", "Colonne", "Lignes"], D.log.map(l => ({ cells: [esc(l.action), l.colonne, l.nb_lignes] })), [2]);
+  document.getElementById("q-note").textContent =
+    `${S.rows_raw} lignes d'origine → ${S.rows_clean} lignes propres · ${S.quarantine} en quarantaine · ${S.val_fail} lignes en échec avant nettoyage.`;
+  if (!D.quarantine.length) document.getElementById("t-quar").innerHTML =
+    `<tbody><tr><td class="empty">Aucune ligne en quarantaine : tous les défauts étaient corrigeables.</td></tr></tbody>`;
+  else table("t-quar", ["Ligne", "Rapport", "Champ", "Motif"],
+    D.quarantine.map(q => ({ cells: [q.id_ligne, q.id_report ?? "—", q.code_champ ?? "—", esc(q.motif_quarantaine)] })));
+}
+
+// ---------- Import d'un autre fichier : pipeline.py exécuté dans le navigateur ----------
+let pyodide = null;
+function setStatus(text, kind = "") {
+  const el = document.getElementById("status"); el.textContent = text; el.className = "status " + kind;
+}
+async function getPyodide(needExcel) {
+  if (!pyodide) {
+    setStatus("Chargement de Python dans le navigateur (≈ 20 s la première fois)…");
+    await new Promise((ok, ko) => {
+      const s = Object.assign(document.createElement("script"), { src: PYODIDE_URL + "pyodide.js", onload: ok,
+        onerror: () => ko(new Error("Impossible de charger Python : vérifiez la connexion internet.")) });
+      document.head.appendChild(s);
+    });
+    pyodide = await loadPyodide({ indexURL: PYODIDE_URL });
+    await pyodide.loadPackage(["pandas"]);
+    pyodide.FS.writeFile("/home/pyodide/pipeline.py", PIPELINE_SRC);
+  }
+  if (needExcel && !pyodide.excelReady) {
+    setStatus("Installation du lecteur Excel…");
+    await pyodide.loadPackage(["micropip"]);
+    await pyodide.runPythonAsync("import micropip\nawait micropip.install('openpyxl')");
+    pyodide.excelReady = true;
+  }
+  return pyodide;
+}
+async function importFile(file) {
+  const label = document.querySelector("label[for=file]");
+  label.setAttribute("aria-disabled", "true");
+  try {
+    const excel = /\.xlsx?$/i.test(file.name);
+    const py = await getPyodide(excel);
+    setStatus(`Exécution du pipeline sur ${file.name}…`);
+    const path = "/home/pyodide/" + file.name.replace(/[^\w.\-]/g, "_");
+    py.FS.writeFile(path, new Uint8Array(await file.arrayBuffer()));
+    py.globals.set("input_path", path);
+    const json = await py.runPythonAsync(
+      "import sys, json, importlib\nsys.path.insert(0, '/home/pyodide')\nimport pipeline\n" +
+      "importlib.reload(pipeline)\njson.dumps(pipeline.dashboard_data(input_path))");
+    D = JSON.parse(json); S = D.summary; S.source = file.name;
+    renderStatic(); render();
+    document.getElementById("demo").hidden = false;
+    setStatus(`✓ ${file.name} : ${S.rows_raw} lignes lues, ${S.rows_clean} propres, ${S.quarantine} en quarantaine.`, "ok");
+  } catch (e) {
+    // Message Python lisible (ex. « Colonnes attendues absentes : [...] »)
+    let msg = String(e.message || e).trim().split("\n").filter(Boolean).pop().replace(/^\w+Error: /, "");
+    const missing = msg.match(/Colonnes attendues absentes : \[(.*)\]/);
+    if (missing) msg = `ce fichier ne respecte pas le Data Contract (${missing[1].split(",").length} colonnes attendues absentes, ex. ${missing[1].split(",").slice(0, 3).join(",")}…)`;
+    setStatus("Fichier refusé : " + msg, "err");
+  } finally {
+    label.removeAttribute("aria-disabled");
+    document.getElementById("file").value = "";
+  }
+}
+document.getElementById("file").onchange = e => e.target.files[0] && importFile(e.target.files[0]);
+document.getElementById("demo").onclick = () => {
+  D = DEMO; S = DEMO.summary; renderStatic(); render();
+  document.getElementById("demo").hidden = true; setStatus("");
+};
+
+renderStatic();
+
+seg("th-seg", THRESHOLDS, "th", THRESHOLDS.map(t => fmt(t, t < 1 ? 1 : 0) + " %"));
+seg("src-seg", ["manuel", "outil"], "src", ["Saisie manuelle", "Outil"]);
+seg("lvl-seg", ["tous", "ÉLEVÉ", "MOYEN"], "lvl", ["Tous niveaux", "Élevé", "Moyen"]);
+document.querySelectorAll("#tabs button").forEach(b => b.onclick = () => {
+  document.querySelectorAll("#tabs button, .panel").forEach(x => x.classList.remove("on"));
+  b.classList.add("on"); document.getElementById(b.dataset.p).classList.add("on");
+});
+document.getElementById("dl").onclick = () => {
+  const rows = alerts(state.th, state.src);
+  const csv = ["niveau;rapport;message;action", ...rows.map(a => [a.niveau, a.id_report, a.message, a.action].map(v => `"${String(v).replace(/"/g, '""')}"`).join(";"))].join("\n");
+  const url = URL.createObjectURL(new Blob(["﻿" + csv], { type: "text/csv" }));
+  Object.assign(document.createElement("a"), { href: url, download: `alertes_seuil_${state.th}.csv` }).click();
+};
+render();
+</script>
+</body>
+</html>

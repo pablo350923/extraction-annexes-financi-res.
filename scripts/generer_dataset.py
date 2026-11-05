@@ -1,5 +1,10 @@
 import numpy as np, pandas as pd, random
-rng=np.random.default_rng(42); random.seed(42)
+import sys
+# Usage : python scripts/generer_dataset.py [graine] [nb_entreprises] [fichier_sortie]
+SEED = int(sys.argv[1]) if len(sys.argv) > 1 else 42
+N_COMP = int(sys.argv[2]) if len(sys.argv) > 2 else 30
+OUT = sys.argv[3] if len(sys.argv) > 3 else "data/dataset_extraction_annexes_financieres.csv"
+rng=np.random.default_rng(SEED); random.seed(SEED)
 
 companies=[("Valmorel Industries","Industrie","France"),("Ostrava Logistique","Transport & Logistique","France"),
 ("Brennac Santé","Santé","France"),("Kervalis Énergie","Énergie","France"),("Lumeris Retail","Distribution","France"),
@@ -60,7 +65,7 @@ def transpose(v,nd=1):
             l=list(s); l[a],l[b]=l[b],l[a]; return float("".join(l))*(1 if v>=0 else -1)
     return round(v+1,1)
 
-reports=[]; ci=list(range(30)); two=set(rng.choice(30,10,replace=False))
+reports=[]; ci=list(range(N_COMP)); two=set(rng.choice(N_COMP,N_COMP//3,replace=False))
 rid=1
 for c in ci:
     for fy in ([2024,2025] if c in two else [int(rng.choice([2024,2025],p=[.3,.7]))]):
@@ -161,4 +166,4 @@ df["_o"]=np.arange(n,dtype=float)
 dups=df.loc[rng.choice(n,6,replace=False)].copy(); dups["_o"]+=0.5
 df=pd.concat([df,dups]).sort_values("_o").drop(columns="_o").reset_index(drop=True)
 df.insert(0,"id_ligne",[f"L{i+1:04d}" for i in range(len(df))])
-df.to_csv("data/dataset_extraction_annexes_financieres.csv",index=False,encoding="utf-8-sig")
+df.to_csv(OUT,index=False,encoding="utf-8-sig")

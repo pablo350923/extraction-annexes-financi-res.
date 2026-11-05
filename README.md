@@ -34,8 +34,11 @@ Seuil retenu : 0,1 % (84 % des erreurs détectées, 0 fausse alerte) ; le seuil 
 | `pipeline.py` | Toute la logique, en fonctions. `run_pipeline("data/...csv")` lance tout |
 | `notebook_pipeline.ipynb` | Cahier Python : chaque étape exécutée et commentée |
 | `app.py` | Application web Streamlit (alertes, seuil, baseline, qualité des données) |
-| `data/` | Jeu de données synthétique (CSV standard + version Excel FR) et dictionnaire de données |
-| `scripts/generer_dataset.py` | Régénère le jeu de données (graine fixe) |
+| `webapp_controle_annexes.html` | Même application en **un seul fichier HTML** : double-clic pour l'ouvrir. Le bouton « Importer » exécute `pipeline.py` dans le navigateur (Pyodide, connexion internet requise) |
+| `data/` | Jeu de données synthétique (CSV standard + version Excel FR), dictionnaire de données, et **jeu de test « portefeuille B »** (CSV + Excel) pour vérifier l'import d'un autre fichier |
+| `scripts/generer_dataset.py` | Régénère le jeu de données (graine fixe ; graine, taille et fichier de sortie paramétrables) |
+| `scripts/creer_fichier_test.py` | Crée le jeu de test « portefeuille B » (24 rapports, autres entreprises, 4 lignes invalides) |
+| `scripts/build_webapp.py` | Reconstruit la page HTML après une modification de `pipeline.py` |
 | `tests/test_quarantaine.py` | Vérifie que les lignes invalides partent en quarantaine |
 
 ## Lancer le projet
@@ -50,6 +53,12 @@ python tests/test_quarantaine.py   # test
 jupyter notebook notebook_pipeline.ipynb
 streamlit run app.py               # application web sur http://localhost:8501
 ```
+
+## Tester avec un autre fichier
+
+Dans la page HTML ou dans `streamlit run app.py`, importez `data/dataset_test_portefeuille_B.csv` (ou `.xlsx`) :
+24 rapports, 486 lignes → 474 propres, **6 en quarantaine** (date impossible, valeur de référence absente, devise inconnue,
+label contradictoire). Un fichier qui ne respecte pas le Data Contract (ex. `dictionnaire_donnees.csv`) est refusé avec un message clair.
 
 ## Limites
 - Données entièrement synthétiques et fictives (aucune entreprise réelle).
